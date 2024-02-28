@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "gef-ml"
+version = "0.1.0"
+description = ""
+authors = ["Sawyer <sawyer@teamculture.ai>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+unstructured = { extras = ["all-docs"], version = "^0.12.4" }
+llama-index-core = "^0.10.12"
+llama-index-embeddings-together = "^0.1.2"
+llama-index-llms-together = "^0.1.3"
+llama-index-vector-stores-qdrant = "^0.1.3"
+llama-index-readers-file = "^0.1.6"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.2.0"
+ipykernel = "^6.29.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
