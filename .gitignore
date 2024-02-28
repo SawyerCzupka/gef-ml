@@ -28,6 +28,6 @@ dist/
 *.swo
 .DS_Store
 
-data/
+data/*/
 
 .venv/
