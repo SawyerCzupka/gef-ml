@@ -52,10 +52,7 @@ class StreamingIngestion:
 
     WORKERS_PER_CHUNK = 4
 
-    def __init__(
-        self, directory: str, vector_store: BasePydanticVectorStore | None = None
-    ):
-        self.directory = directory
+    def __init__(self, vector_store: BasePydanticVectorStore | None = None):
         self.vector_store = vector_store
         self.pipeline = get_pipeline(vector_store)
 
@@ -82,6 +79,9 @@ class StreamingIngestion:
     def ingest_directory(self, directory: str):
         """
         Ingests the data for the entire directory.
+
+        Args:
+        - directory: The directory containing the data.
         """
 
         project_ids = [
