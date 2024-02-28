@@ -18,6 +18,9 @@ llama-index-readers-file = "^0.1.6"
 black = "^24.2.0"
 ipykernel = "^6.29.2"
 
+[tool.poetry.group.dask.dependencies]
+dask = "^2024.2.1"
+
 
 [build-system]
 requires = ["poetry-core"]
