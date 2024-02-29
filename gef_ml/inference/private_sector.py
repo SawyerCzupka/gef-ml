@@ -9,3 +9,7 @@ Levels of private sector involvement:
 - 5: Finance - Projects where government or civil society engages with private sector for finance and expertise
 - 6: Industry Leadership - Projects that focus directly on the Private Sector as leader (private sector coming up with solutions; not only trained/capacitated)
 """
+
+
+def determine_private_sector_involvement(project_id: str):
+    pass
