@@ -64,8 +64,14 @@ def download_pdfs_from_project_page(project_id):
 
                     file_response = requests.get(href)
                     file_path = os.path.join(
-                        OUTPUT_PATH, f"file{project_id}_{idx}{file_extension}"
+                        OUTPUT_PATH,
+                        f"{project_id}/p{project_id}_doc{idx}{file_extension}",
                     )
+
+                    # Make project dir
+                    if not os.path.exists(os.path.join(OUTPUT_PATH, f"{project_id}")):
+                        os.makedirs(os.path.join(OUTPUT_PATH, f"{project_id}"))
+
                     idx += 1
                     with open(file_path, "wb") as file:
                         file.write(file_response.content)
