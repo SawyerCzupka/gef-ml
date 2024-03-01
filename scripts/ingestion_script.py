@@ -9,11 +9,13 @@ load_dotenv()
 def main():
     vector_store = get_qdrant_vectorstore(collection_name="temp")
 
-    ingest_manager = StreamingIngestion(vector_store=vector_store)
+    ingest_manager = StreamingIngestion(
+        directory="../data/to_ingest/", vector_store=vector_store
+    )
 
     # Ingest the data
 
-    ingest_manager.ingest_directory(directory="data/to_ingest/")
+    ingest_manager.ingest()
 
 
 if __name__ == "__main__":
