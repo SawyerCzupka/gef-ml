@@ -11,7 +11,7 @@ import logging
 import os
 
 from llama_index.core import SimpleDirectoryReader
-from llama_index.core.data_structs import BasePydanticVectorStore
+from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter, SimpleFileNodeParser
 from llama_index.embeddings.together import TogetherEmbedding
