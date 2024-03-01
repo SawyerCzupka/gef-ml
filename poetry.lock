@@ -3695,6 +3695,20 @@ lxml = ">=3.1.0"
 typing-extensions = "*"
 
 [[package]]
+name = "python-dotenv"
+version = "1.0.1"
+description = "Read key-value pairs from a .env file and set them as environment variables"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "python-dotenv-1.0.1.tar.gz", hash = "sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca"},
+    {file = "python_dotenv-1.0.1-py3-none-any.whl", hash = "sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a"},
+]
+
+[package.extras]
+cli = ["click (>=5.0)"]
+
+[[package]]
 name = "python-iso639"
 version = "2024.2.7"
 description = "Look-up utilities for ISO 639 language codes and names"
@@ -5497,4 +5511,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "932d3f2872c3252640ee48322d5ae80a255fb93aea9ce9ddb08615718c000bb1"
+content-hash = "57edfb975e9f12aeb8178481c6b164cdf836776474614180ebb949467450a788"
