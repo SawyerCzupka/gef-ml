@@ -52,7 +52,10 @@ class StreamingIngestion:
 
     WORKERS_PER_CHUNK = 4
 
-    def __init__(self, vector_store: BasePydanticVectorStore | None = None):
+    def __init__(
+        self, directory: str, vector_store: BasePydanticVectorStore | None = None
+    ):
+        self.directory = directory
         self.vector_store = vector_store
         self.pipeline = get_pipeline(vector_store)
 
@@ -76,7 +79,7 @@ class StreamingIngestion:
             num_workers=self.WORKERS_PER_CHUNK,
         )  # import directly to vector store
 
-    def ingest_directory(self, directory: str):
+    def ingest(self):
         """
         Ingests the data for the entire directory.
 
@@ -86,11 +89,11 @@ class StreamingIngestion:
 
         project_ids = [
             f
-            for f in os.listdir(directory)
-            if os.path.isdir(os.path.join(directory, f))
+            for f in os.listdir(self.directory)
+            if os.path.isdir(os.path.join(self.directory, f))
         ]
 
-        logger.info(f"Found {len(project_ids)} projects in directory {directory}.")
+        logger.info(f"Found {len(project_ids)} projects in directory {self.directory}.")
 
         for project_id in tqdm(project_ids):
             logger.info(f"Ingesting project {project_id}: Started...")
