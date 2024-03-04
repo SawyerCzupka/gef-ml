@@ -20,6 +20,8 @@ from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import BaseNode
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
+from tqdm import tqdm
+from tqdm.asyncio import tqdm_asyncio
 
 # Load environment variables
 load_dotenv()
@@ -142,7 +144,7 @@ class StreamingIngestion:
         ) as response:
             if response.status == 200:
                 data = await response.json()
-                return data.get("embedding")
+                return data["data"][0]["embedding"]
             else:
                 logger.error(
                     "Failed to generate embedding for node. HTTP Status: %d",
@@ -154,7 +156,7 @@ class StreamingIngestion:
         self,
         nodes: Sequence[BaseNode],
         model: str = "togethercomputer/m2-bert-80M-32k-retrieval",
-        max_requests_per_second: int = 150,
+        max_requests_per_second: int = 100,
     ) -> Sequence[BaseNode]:
         """
         Generate embeddings for a list of documents using the Together API.
@@ -172,13 +174,15 @@ class StreamingIngestion:
         async with aiohttp.ClientSession() as session:
             tasks = []
             limiter = AsyncLimiter(max_rate=max_requests_per_second, time_period=1)
-            for node in nodes:
+            for node in tqdm(nodes, desc="Creating tasks"):
                 async with limiter:
                     task = asyncio.create_task(
                         self.fetch_embedding(session, node, model)
                     )
                     tasks.append(task)
-            embeddings = await asyncio.gather(*tasks)
+            embeddings = await tqdm_asyncio.gather(*tasks, desc="Generating embeddings")
+            # embeddings = await asyncio.gather(*tasks)
+
         for node, embedding in zip(nodes, embeddings):
             if embedding:
                 node.embedding = embedding
@@ -209,6 +213,9 @@ class StreamingIngestion:
                 nodes = self._ingest_project_id(project_id, show_progress=True)
                 embeddings = await self.generate_embeddings_rest(nodes)
                 # Assuming self.vector_store has an add method to store embeddings
+                logger.info(
+                    "Adding embeddings to vector store for project %s", project_id
+                )
                 if self.vector_store:
                     self.vector_store.add(embeddings)
                 logger.info("Completed ingestion for project %s", project_id)
@@ -216,3 +223,4 @@ class StreamingIngestion:
                 logger.error(
                     "Failed to ingest project %s due to error: %s", project_id, e
                 )
+                logger.exception("Error details:")
