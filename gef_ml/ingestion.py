@@ -23,6 +23,11 @@ from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from tqdm import tqdm
 from tqdm.asyncio import tqdm_asyncio
 
+
+from gef_ml.utils.log_config import setup_logging
+
+setup_logging()
+
 # Load environment variables
 load_dotenv()
 
@@ -35,11 +40,6 @@ EMBED_ENDPOINT_URL = "https://api.together.xyz/v1/embeddings"
 
 # Configure logger
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    filename="ingestion.log",
-)
 logger = logging.getLogger(__name__)
 
 
