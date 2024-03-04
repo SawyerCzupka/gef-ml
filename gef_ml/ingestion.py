@@ -52,7 +52,7 @@ def get_pipeline(
         "Initializing ingestion pipeline with model: %s", together_embed_model_name
     )
     transformations = [
-        SentenceSplitter(chunk_size=384, chunk_overlap=64, include_metadata=True),
+        SentenceSplitter(chunk_size=512, chunk_overlap=64, include_metadata=True),
     ]
     return IngestionPipeline(transformations=transformations)
 
@@ -207,7 +207,7 @@ class StreamingIngestion:
             "Found %d projects in directory %s", len(project_ids), self.directory
         )
 
-        for project_id in project_ids:
+        for project_id in tqdm(project_ids, desc="Ingesting projects"):
             logger.info("Starting ingestion for project %s", project_id)
             try:
                 nodes = self._ingest_project_id(project_id, show_progress=True)
