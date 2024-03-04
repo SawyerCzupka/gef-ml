@@ -36,7 +36,9 @@ EMBED_ENDPOINT_URL = "https://api.together.xyz/v1/embeddings"
 # Configure logger
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.DEBUG,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    filename="ingestion.log",
 )
 logger = logging.getLogger(__name__)
 
@@ -140,6 +142,7 @@ class StreamingIngestion:
             "Authorization": f"Bearer {TOGETHER_API_KEY}",
             "Content-type": "application/json",
         }
+
         async with session.post(
             EMBED_ENDPOINT_URL, json=payload, headers=headers
         ) as response:
@@ -149,7 +152,9 @@ class StreamingIngestion:
                 if embeddings_progress:
                     embeddings_progress.update(1)
 
-                return data["data"][0]["embedding"]
+                embedding = data["data"][0]["embedding"]
+
+                return embedding
             else:
                 logger.error(
                     "Failed to generate embedding for node. HTTP Status: %d",
@@ -191,11 +196,21 @@ class StreamingIngestion:
                     tasks.append(task)
             # embeddings = await tqdm_asyncio.gather(*tasks, desc="Generating embeddings")
 
-            embeddings = await asyncio.gather(*tasks, return_exceptions=True)
+            embeddings = await asyncio.gather(*tasks)
 
         for node, embedding in zip(nodes, embeddings):
-            if embedding:
-                node.embedding = embedding
+            if not isinstance(embedding, Exception):
+                try:
+                    node.embedding = embedding
+
+                except Exception as e:
+                    logger.error("Failed to set embedding for node due to error: %s", e)
+                    logger.error("Embedding: %s", embedding)
+                    logger.exception("Error details:")
+            else:
+                logger.error("Node embedding is an exception: %s", embedding)
+                logger.error("Node: %s", node)
+                logger.exception("Error details:")
 
         logger.info("Generated embeddings for %d nodes", len(nodes))
         return nodes
