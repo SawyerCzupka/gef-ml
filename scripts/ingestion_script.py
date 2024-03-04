@@ -3,10 +3,15 @@ from gef_ml.utils import get_qdrant_vectorstore
 
 from dotenv import load_dotenv
 
+import logging
+import asyncio
+
+logging.basicConfig(level=logging.INFO)
+
 load_dotenv()
 
 
-def main():
+async def main():
     vector_store = get_qdrant_vectorstore(collection_name="temp")
 
     ingest_manager = StreamingIngestion(
@@ -15,8 +20,8 @@ def main():
 
     # Ingest the data
 
-    ingest_manager.ingest()
+    await ingest_manager.ingest()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
