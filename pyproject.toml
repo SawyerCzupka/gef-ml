@@ -21,6 +21,7 @@ aiometer = "^0.5.0"
 backoff = "^2.2.1"
 aiohttp = "^3.9.3"
 docx2txt = "^0.8"
+colorlog = "^6.8.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.2.0"
