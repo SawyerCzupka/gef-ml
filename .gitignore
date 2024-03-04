@@ -30,4 +30,4 @@ dist/
 
 data/*/
 
-.venv/
+.venv*/
