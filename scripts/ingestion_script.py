@@ -7,7 +7,6 @@ import logging
 import asyncio
 
 logging.basicConfig(level=logging.INFO)
-
 load_dotenv()
 
 
