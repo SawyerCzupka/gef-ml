@@ -12,10 +12,10 @@ load_dotenv()
 
 
 async def main():
-    vector_store = get_qdrant_vectorstore(collection_name="temp")
+    vector_store = get_qdrant_vectorstore(collection_name="all_projects_512_64")
 
     ingest_manager = StreamingIngestion(
-        directory="../data/to_ingest/", vector_store=vector_store
+        directory="../data/dump/", vector_store=vector_store
     )
 
     # Ingest the data
