@@ -25,6 +25,8 @@ from tqdm.asyncio import tqdm_asyncio
 
 
 from gef_ml.utils.log_config import setup_logging
+import time
+import backoff
 
 setup_logging()
 
@@ -130,7 +132,8 @@ class StreamingIngestion:
 
         return processed_nodes
 
-    async def fetch_embedding(
+    @backoff.on_predicate(backoff.expo, lambda x: x is None, max_tries=3)
+    async def fetch_embedding_with_retry(
         self,
         session: aiohttp.ClientSession,
         node: BaseNode,
@@ -181,22 +184,19 @@ class StreamingIngestion:
         logger.info(
             "Generating embeddings for %d nodes using model %s", len(nodes), model
         )
-        async with aiohttp.ClientSession() as session:
+
+        timeout = aiohttp.ClientTimeout(total=60 * 60 * 8)  # 8 hours
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             tasks = []
             limiter = AsyncLimiter(max_rate=max_requests_per_second, time_period=1)
 
-            iterator = tqdm(nodes, desc="Creating tasks")
-            embeddings_progress = tqdm_asyncio(nodes, desc="Generating embeddings")
-
-            for node in iterator:
+            for node in tqdm(nodes, desc="Creating tasks"):
                 async with limiter:
                     task = asyncio.create_task(
-                        self.fetch_embedding(session, node, model, embeddings_progress)
+                        self.fetch_embedding_with_retry(session, node, model)
                     )
                     tasks.append(task)
-            # embeddings = await tqdm_asyncio.gather(*tasks, desc="Generating embeddings")
-
-            embeddings = await asyncio.gather(*tasks)
+            embeddings = await tqdm_asyncio.gather(*tasks, desc="Generating embeddings")
 
         for node, embedding in zip(nodes, embeddings):
             if not isinstance(embedding, Exception):
