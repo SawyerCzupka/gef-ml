@@ -673,6 +673,16 @@ files = [
 ]
 
 [[package]]
+name = "docx2txt"
+version = "0.8"
+description = "A pure python-based utility to extract text and images from docx files."
+optional = false
+python-versions = "*"
+files = [
+    {file = "docx2txt-0.8.tar.gz", hash = "sha256:2c06d98d7cfe2d3947e5760a57d924e3ff07745b379c8737723922e7009236e5"},
+]
+
+[[package]]
 name = "exceptiongroup"
 version = "1.2.0"
 description = "Backport of PEP 654 (exception groups)"
@@ -3667,4 +3677,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "ffe23f2440cb0cb4ea7234c0f85c8e07fa983cd4bf1f0c5b71a582b393310ee0"
+content-hash = "22e8cf2bbbecfac00b0d1626e7b307cf70e15935655db9d0b5478af8a5c83834"
