@@ -32,6 +32,10 @@ if TOGETHER_API_KEY is None:
 EMBED_ENDPOINT_URL = "https://api.together.xyz/v1/embeddings"
 
 # Configure logger
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -42,6 +46,9 @@ def get_pipeline(
     """
     Initializes and returns an ingestion pipeline with predefined transformations.
     """
+    logger.debug(
+        "Initializing ingestion pipeline with model: %s", together_embed_model_name
+    )
     transformations = [
         SentenceSplitter(chunk_size=384, chunk_overlap=64, include_metadata=True),
     ]
@@ -52,6 +59,7 @@ def file_metadata(filename: str) -> dict[str, str]:
     """
     Extracts metadata from the given filename.
     """
+    logger.debug("Extracting metadata from filename: %s", filename)
     base_name = os.path.basename(filename)
     project_id, doc_id = parse_filename(base_name)
     return {
@@ -69,6 +77,9 @@ def parse_filename(filename: str) -> tuple[str, str]:
     parts = filename.split("_")
     project_id = parts[0][1:]
     doc_id = parts[1].split(".")[0][3:]
+    logger.debug(
+        "Parsed filename %s into project_id=%s, doc_id=%s", filename, project_id, doc_id
+    )
     return project_id, doc_id
 
 
@@ -84,6 +95,7 @@ class StreamingIngestion:
     def __init__(
         self, directory: str, vector_store: BasePydanticVectorStore | None = None
     ):
+        logger.info("Initializing StreamingIngestion for directory: %s", directory)
         self.directory = directory
         self.vector_store = vector_store
         self.pipeline = get_pipeline(vector_store)
@@ -96,14 +108,23 @@ class StreamingIngestion:
         """
 
         project_dir = os.path.join(self.directory, project_id)
+        logger.info(
+            "Ingesting documents for project ID: %s from %s", project_id, project_dir
+        )
         reader = SimpleDirectoryReader(project_dir, file_metadata=file_metadata)
         documents = reader.load_data(num_workers=4)
-        logger.info(f"Loaded {len(documents)} documents for project {project_id}.")
-        return self.pipeline.run(
+        logger.info("Loaded %d documents for project %s.", len(documents), project_id)
+
+        processed_nodes = self.pipeline.run(
             show_progress=show_progress,
             documents=documents,
             num_workers=self.WORKERS_PER_CHUNK,
         )
+        logger.info(
+            "Processed %d documents for project %s.", len(processed_nodes), project_id
+        )
+
+        return processed_nodes
 
     async def fetch_embedding(
         self,
@@ -124,7 +145,8 @@ class StreamingIngestion:
                 return data.get("embedding")
             else:
                 logger.error(
-                    f"Failed to generate embedding for node. Status: {response.status}"
+                    "Failed to generate embedding for node. HTTP Status: %d",
+                    response.status,
                 )
                 return None
 
@@ -144,6 +166,9 @@ class StreamingIngestion:
         Returns:
         - A list of embeddings for the documents.
         """
+        logger.info(
+            "Generating embeddings for %d nodes using model %s", len(nodes), model
+        )
         async with aiohttp.ClientSession() as session:
             tasks = []
             limiter = AsyncLimiter(max_rate=max_requests_per_second, time_period=1)
@@ -157,6 +182,8 @@ class StreamingIngestion:
         for node, embedding in zip(nodes, embeddings):
             if embedding:
                 node.embedding = embedding
+
+        logger.info("Generated embeddings for %d nodes", len(nodes))
         return nodes
 
     async def ingest(self):
@@ -172,16 +199,20 @@ class StreamingIngestion:
             for f in os.listdir(self.directory)
             if os.path.isdir(os.path.join(self.directory, f))
         ]
-        logger.info(f"Found {len(project_ids)} projects in directory {self.directory}.")
+        logger.info(
+            "Found %d projects in directory %s", len(project_ids), self.directory
+        )
 
         for project_id in project_ids:
-            logger.info(f"Ingesting project {project_id}: Started...")
+            logger.info("Starting ingestion for project %s", project_id)
             try:
                 nodes = self._ingest_project_id(project_id, show_progress=True)
                 embeddings = await self.generate_embeddings_rest(nodes)
                 # Assuming self.vector_store has an add method to store embeddings
                 if self.vector_store:
                     self.vector_store.add(embeddings)
-                logger.info(f"Ingesting project {project_id}: Done.")
+                logger.info("Completed ingestion for project %s", project_id)
             except Exception as e:
-                logger.error(f"Ingesting project {project_id}: Failed with error {e}")
+                logger.error(
+                    "Failed to ingest project %s due to error: %s", project_id, e
+                )
