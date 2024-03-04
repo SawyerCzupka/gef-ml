@@ -1,6 +1,18 @@
-# log_config.py
 import logging
 import os
+from colorlog import ColoredFormatter
+
+
+class ExcludeSpecificLoggerFilter(logging.Filter):
+    def __init__(self, name, level):
+        super().__init__(name)
+        self.level = level
+
+    def filter(self, record):
+        # Check if the record comes from the specified logger and its level is DEBUG
+        if self.name in record.name and record.levelno == logging.DEBUG:
+            return False  # Exclude DEBUG logs from the specified logger
+        return True  # Include all other logs
 
 
 def setup_logging():
@@ -12,19 +24,32 @@ def setup_logging():
         logging.DEBUG
     )  # Set root logger to handle DEBUG and higher level logs
 
-    # Create handlers
-    c_handler = logging.StreamHandler()  # Console handler
-    f_handler = logging.FileHandler(log_file_path)  # File handler
+    # Define log format
+    log_format = (
+        "%(asctime)s - %(name)s - %(log_color)s%(levelname)s%(reset)s - %(message)s"
+    )
+    colors = {
+        "DEBUG": "cyan",
+        "INFO": "green",
+        "WARNING": "yellow",
+        "ERROR": "red",
+        "CRITICAL": "red,bg_white",
+    }
 
-    # Create formatters and add it to handlers
-    c_format = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
-    f_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    # Console handler with colored output
+    c_handler = logging.StreamHandler()
+    c_format = ColoredFormatter(log_format, log_colors=colors)
     c_handler.setFormatter(c_format)
-    f_handler.setFormatter(f_format)
+    c_handler.setLevel(logging.INFO)
 
-    # Set levels for handlers
-    c_handler.setLevel(logging.INFO)  # Console handler for INFO and above
-    f_handler.setLevel(logging.DEBUG)  # File handler for DEBUG and above
+    # File handler with standard formatting
+    f_handler = logging.FileHandler(log_file_path)
+    f_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    f_handler.setFormatter(f_format)
+    f_handler.setLevel(logging.DEBUG)
+
+    # Add a filter to exclude DEBUG logs from 'llamaindex'
+    f_handler.addFilter(ExcludeSpecificLoggerFilter("llama_index", logging.DEBUG))
 
     # Add handlers to the logger
     logger.addHandler(c_handler)
