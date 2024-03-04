@@ -133,6 +133,7 @@ class StreamingIngestion:
         session: aiohttp.ClientSession,
         node: BaseNode,
         model: str = "togethercomputer/m2-bert-80M-32k-retrieval",
+        embeddings_progress=None,
     ) -> dict:
         payload = {"input": node.get_content(metadata_mode="all"), "model": model}
         headers = {
@@ -144,6 +145,10 @@ class StreamingIngestion:
         ) as response:
             if response.status == 200:
                 data = await response.json()
+
+                if embeddings_progress:
+                    embeddings_progress.update(1)
+
                 return data["data"][0]["embedding"]
             else:
                 logger.error(
@@ -174,14 +179,19 @@ class StreamingIngestion:
         async with aiohttp.ClientSession() as session:
             tasks = []
             limiter = AsyncLimiter(max_rate=max_requests_per_second, time_period=1)
-            for node in tqdm(nodes, desc="Creating tasks"):
+
+            iterator = tqdm(nodes, desc="Creating tasks")
+            embeddings_progress = tqdm_asyncio(nodes, desc="Generating embeddings")
+
+            for node in iterator:
                 async with limiter:
                     task = asyncio.create_task(
-                        self.fetch_embedding(session, node, model)
+                        self.fetch_embedding(session, node, model, embeddings_progress)
                     )
                     tasks.append(task)
-            embeddings = await tqdm_asyncio.gather(*tasks, desc="Generating embeddings")
-            # embeddings = await asyncio.gather(*tasks)
+            # embeddings = await tqdm_asyncio.gather(*tasks, desc="Generating embeddings")
+
+            embeddings = await asyncio.gather(*tasks, return_exceptions=True)
 
         for node, embedding in zip(nodes, embeddings):
             if embedding:
