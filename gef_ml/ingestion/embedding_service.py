@@ -36,7 +36,7 @@ class EmbeddingService:
         self,
         session: aiohttp.ClientSession,
         nodes: list[Document],
-        model: str = "togethercomputer/m2-bert-80M-32k-retrieval",
+        model: str,
         embeddings_progress=None,
     ) -> list[Document]:
 
@@ -71,7 +71,7 @@ class EmbeddingService:
     async def generate_embeddings(
         self,
         nodes: List[Document],
-        model: str = "togethercomputer/m2-bert-80M-32k-retrieval",
+        model: str = "togethercomputer/m2-bert-80M-2k-retrieval",
         max_requests_per_second: int = 100,
         max_chunk_size: int = 10,
     ) -> List[Document]:

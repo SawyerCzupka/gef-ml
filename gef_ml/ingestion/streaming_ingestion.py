@@ -86,7 +86,7 @@ class StreamingIngestion:
             try:
                 nodes = self._ingest_project_id(project_id, show_progress=True)
                 embeddings = await embed_service.generate_embeddings(
-                    nodes, max_chunk_size=2
+                    nodes, max_chunk_size=16
                 )
                 logger.info(
                     "Adding embeddings to vector store for project %s", project_id
