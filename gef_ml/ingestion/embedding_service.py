@@ -5,12 +5,14 @@ import logging
 import os
 from typing import List
 
+from tqdm.asyncio import tqdm_asyncio
+from tqdm import tqdm
 import aiohttp
 import backoff
 from aiolimiter import AsyncLimiter
 from llama_index.core.schema import Document, MetadataMode
 
-from gef_ml.utils import setup_logging
+from gef_ml.utils.log_config import setup_logging
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -84,14 +86,14 @@ class EmbeddingService:
                 for i in range(0, len(nodes), max_chunk_size)
             ]
 
-            for node_chunk in chunks:
+            for node_chunk in tqdm(chunks, desc="Creating embedding requests"):
                 async with limiter:
                     task = asyncio.create_task(
                         self._fetch_embeddings_with_retry(session, node_chunk, model)
                     )
                     tasks.append(task)
 
-            embeddings = await asyncio.gather(*tasks)
+            embeddings = await tqdm_asyncio.gather(*tasks, desc="Gathering embeddings")
             flattened_embeddings = [
                 item for sublist in embeddings for item in sublist
             ]  # Flatten the list of lists

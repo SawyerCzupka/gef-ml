@@ -4,9 +4,7 @@ from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 
-from gef_ml.utils import setup_logging
-
-setup_logging()
+# Configure logger
 
 logger = logging.getLogger(__name__)
 

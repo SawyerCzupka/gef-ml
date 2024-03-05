@@ -11,7 +11,8 @@ from tqdm import tqdm
 
 from gef_ml.ingestion.embedding_service import EmbeddingService
 from gef_ml.ingestion.pipeline import get_pipeline
-from gef_ml.utils import file_metadata, setup_logging
+from gef_ml.utils import file_metadata
+from gef_ml.utils.log_config import setup_logging
 
 load_dotenv()
 setup_logging()
@@ -84,7 +85,9 @@ class StreamingIngestion:
             logger.info("Starting ingestion for project %s", project_id)
             try:
                 nodes = self._ingest_project_id(project_id, show_progress=True)
-                embeddings = await embed_service.generate_embeddings(nodes)
+                embeddings = await embed_service.generate_embeddings(
+                    nodes, max_chunk_size=2
+                )
                 logger.info(
                     "Adding embeddings to vector store for project %s", project_id
                 )

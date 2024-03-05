@@ -4,7 +4,7 @@ import unicodedata
 
 from llama_index.core.schema import Document, TransformComponent
 
-from gef_ml.utils import setup_logging
+from gef_ml.utils.log_config import setup_logging
 
 setup_logging()
 logger = logging.getLogger(__name__)

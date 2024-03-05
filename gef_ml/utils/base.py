@@ -1,7 +1,8 @@
 import logging
 import os
 
-from gef_ml.utils import setup_logging
+from gef_ml.utils.log_config import setup_logging
+
 
 setup_logging()
 
@@ -34,3 +35,6 @@ def parse_filename(filename: str) -> tuple[str, str]:
         "Parsed filename %s into project_id=%s, doc_id=%s", filename, project_id, doc_id
     )
     return project_id, doc_id
+
+
+__all__ = ["file_metadata", "parse_filename"]

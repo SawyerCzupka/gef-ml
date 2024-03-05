@@ -2,6 +2,8 @@ import logging
 import os
 from colorlog import ColoredFormatter
 
+_already_setup = False
+
 
 class ExcludeSpecificLoggerFilter(logging.Filter):
     def __init__(self, name, level):
@@ -16,6 +18,13 @@ class ExcludeSpecificLoggerFilter(logging.Filter):
 
 
 def setup_logging():
+    global _already_setup
+    if _already_setup:
+        return
+
+    else:
+        _already_setup = True
+
     log_file_path = os.path.join("/home/sawyer/git/gef-ml/", "ingestion.log")
 
     # Create a custom logger
@@ -54,3 +63,6 @@ def setup_logging():
     # Add handlers to the logger
     logger.addHandler(c_handler)
     logger.addHandler(f_handler)
+
+
+__all__ = ["setup_logging"]
