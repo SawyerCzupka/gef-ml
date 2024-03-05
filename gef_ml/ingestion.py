@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 from llama_index.core import SimpleDirectoryReader
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.schema import BaseNode, TransformComponent
+from llama_index.core.schema import TransformComponent, MetadataMode, Document
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from tqdm import tqdm
 from tqdm.asyncio import tqdm_asyncio
@@ -52,7 +52,7 @@ class TextCleaner(TransformComponent):
     other non-standard whitespace or control characters.
     """
 
-    def __call__(self, nodes, **kwargs):
+    def __call__(self, nodes: list[Document], **kwargs):
         for node in nodes:
             node.text = re.sub(r"(\w)\u00a0(\w)", r"\1 \2", node.text)
             node.text = re.sub(r"(\w)\u00a0", r"\1 ", node.text)
@@ -71,7 +71,7 @@ class TextCleaner(TransformComponent):
 
 
 def get_pipeline(
-    vector_store: BasePydanticVectorStore = None,
+    vector_store: BasePydanticVectorStore | None = None,
     together_embed_model_name: str = "togethercomputer/m2-bert-80M-32k-retrieval",
 ) -> IngestionPipeline:
     """
@@ -82,9 +82,9 @@ def get_pipeline(
     )
     transformations = [
         SentenceSplitter(chunk_size=512, chunk_overlap=64, include_metadata=True),
-        # TextCleaner(),
     ]
-    return IngestionPipeline(transformations=transformations)
+
+    return IngestionPipeline(transformations=transformations)  # type: ignore
 
 
 def file_metadata(filename: str) -> dict[str, str]:
@@ -134,7 +134,7 @@ class StreamingIngestion:
 
     def _ingest_project_id(
         self, project_id: str, show_progress: bool = True
-    ) -> Sequence[BaseNode]:
+    ) -> list[Document]:
         """
         Ingests documents for a given project ID, returning the processed nodes.
         """
@@ -156,17 +156,21 @@ class StreamingIngestion:
             "Processed %d documents for project %s.", len(processed_nodes), project_id
         )
 
-        return processed_nodes
+        return processed_nodes  # type: ignore
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=3)
     @backoff.on_predicate(backoff.expo, lambda x: x is None, max_tries=3)
-    async def fetch_embedding_with_retry(
+    async def fetch_embeddings_with_retry(
         self,
         session: aiohttp.ClientSession,
-        node: BaseNode,
+        nodes: list[Document],
         model: str = "togethercomputer/m2-bert-80M-32k-retrieval",
         embeddings_progress=None,
-    ) -> dict:
-        payload = {"input": node.get_content(metadata_mode="all"), "model": model}
+    ) -> list[Document]:
+
+        req_input = [n.get_content(metadata_mode=MetadataMode.EMBED) for n in nodes]
+
+        payload = {"input": req_input, "model": model}
         headers = {
             "Authorization": f"Bearer {TOGETHER_API_KEY}",
             "Content-type": "application/json",
@@ -176,27 +180,28 @@ class StreamingIngestion:
             EMBED_ENDPOINT_URL, json=payload, headers=headers
         ) as response:
             if response.status == 200:
-                data = await response.json()
+                raw = await response.json()
+
+                data = raw.get("data")
 
                 if embeddings_progress:
                     embeddings_progress.update(1)
 
-                embedding = data["data"][0]["embedding"]
+                for i, n in enumerate(nodes):
+                    n.embedding = data[i]["embedding"]
+                return nodes
 
-                return embedding
             else:
-                logger.error(
-                    "Failed to generate embedding for node. HTTP Status: %d",
-                    response.status,
+                raise Exception(
+                    f"Failed to generate embedding for node. HTTP Status: {response.status}"
                 )
-                return None
 
     async def generate_embeddings_rest(
         self,
-        nodes: Sequence[BaseNode],
+        nodes: list[Document],
         model: str = "togethercomputer/m2-bert-80M-32k-retrieval",
         max_requests_per_second: int = 100,
-    ) -> Sequence[BaseNode]:
+    ) -> list[Document]:
         """
         Generate embeddings for a list of documents using the Together API.
 
@@ -219,10 +224,12 @@ class StreamingIngestion:
             for node in tqdm(nodes, desc="Creating tasks"):
                 async with limiter:
                     task = asyncio.create_task(
-                        self.fetch_embedding_with_retry(session, node, model)
+                        self.fetch_embeddings_with_retry(session, [node], model)
                     )
                     tasks.append(task)
-            embeddings = await tqdm_asyncio.gather(*tasks, desc="Generating embeddings")
+            embeddings = await tqdm_asyncio.gather(
+                *tasks, desc="Generating embeddings"
+            )  # embeddings is a list of nodes
 
         for node, embedding in zip(nodes, embeddings):
             if not isinstance(embedding, Exception):
@@ -263,12 +270,11 @@ class StreamingIngestion:
             try:
                 nodes = self._ingest_project_id(project_id, show_progress=True)
                 embeddings = await self.generate_embeddings_rest(nodes)
-                # Assuming self.vector_store has an add method to store embeddings
                 logger.info(
                     "Adding embeddings to vector store for project %s", project_id
                 )
                 if self.vector_store:
-                    self.vector_store.add(embeddings)
+                    self.vector_store.add(embeddings)  # type: ignore
                 logger.info("Completed ingestion for project %s", project_id)
             except Exception as e:
                 logger.error(
