@@ -11,10 +11,10 @@ load_dotenv()
 
 
 async def main():
-    vector_store = get_qdrant_vectorstore(collection_name="all_projects_512_64")
+    vector_store = get_qdrant_vectorstore(collection_name="gef_6_512_64")
 
     ingest_manager = StreamingIngestion(
-        directory="../data/dump/", vector_store=vector_store
+        directory="../data/gef-6/", vector_store=vector_store
     )
 
     # Ingest the data
