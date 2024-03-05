@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 from llama_index.core import SimpleDirectoryReader
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.schema import TransformComponent, MetadataMode, Document
+from llama_index.core.schema import Document, MetadataMode, TransformComponent
 from llama_index.core.vector_stores.types import BasePydanticVectorStore
 from tqdm import tqdm
 from tqdm.asyncio import tqdm_asyncio
