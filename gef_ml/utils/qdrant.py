@@ -1,6 +1,6 @@
+from llama_index.vector_stores.qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
-from llama_index.vector_stores.qdrant import QdrantVectorStore
 
 
 def get_qdrant_vectorstore(
