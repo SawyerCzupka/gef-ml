@@ -22,6 +22,7 @@ from llama_index.core.base.response.schema import PydanticResponse
 from llama_index.core.response_synthesizers import TreeSummarize
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.vector_stores import VectorStoreQuery
+from llama_index.core.vector_stores.types import VectorStoreQueryMode
 from llama_index.embeddings.together import TogetherEmbedding
 from llama_index.llms.together import TogetherLLM
 from pydantic import BaseModel, Field
@@ -81,7 +82,10 @@ def retrieve_points(project_id: str, collection_name: str) -> List[NodeWithScore
     )
     # TODO Use MMR instead of default query mode.
     qdrant_query = VectorStoreQuery(
-        query_embedding=query_embedding, similarity_top_k=20
+        query_embedding=query_embedding,
+        similarity_top_k=20,
+        mode=VectorStoreQueryMode.MMR,
+        mmr_threshold=0.8,  # TODO: Determine the best threshold, closer to one is more similar, closer to zero is more diverse
     )
 
     logger.info(
