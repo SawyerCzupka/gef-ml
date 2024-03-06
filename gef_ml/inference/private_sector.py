@@ -14,7 +14,6 @@ Also have the in depth descriptions from Eki
 
 import logging
 import os
-from operator import inv
 from typing import List, Literal, Optional
 
 from llama_index.core import PromptHelper
@@ -27,7 +26,6 @@ from llama_index.embeddings.together import TogetherEmbedding
 from llama_index.llms.together import TogetherLLM
 from pydantic import BaseModel, Field
 from qdrant_client.http import models as qdrant_models
-from regex import F
 
 from gef_ml.utils import get_qdrant_vectorstore
 
