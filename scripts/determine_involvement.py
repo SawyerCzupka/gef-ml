@@ -7,11 +7,16 @@ setup_logging()
 
 logger = logging.getLogger(__name__)
 
+GEF_6_COLLECTION = "gef_6_512_64"
+
 
 def main():
     project_id = "1234"
+    collection = GEF_6_COLLECTION
 
-    response = determine_private_sector_involvement(project_id)
+    response = determine_private_sector_involvement(
+        project_id, qdrant_collection=collection
+    )
 
     if response:
         logger.info(f"Private sector involvement: {response.involvement_level}")
