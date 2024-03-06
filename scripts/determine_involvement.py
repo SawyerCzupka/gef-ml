@@ -47,11 +47,11 @@ def determine_involvement_batch(
                 logger.warning(f"No data received for project ID {project_id}")
 
 
-def get_project_ids_from_xlsx() -> list[str]:
+def get_project_ids_from_xlsx(gef_phase: int) -> list[str]:
     df = pd.read_excel(io=EXCEL_PATH, sheet_name=EXCEL_SHEET)
     df["GEF ID"] = df["GEF ID"].astype(str)
 
-    gef_6 = df[df["GEF Phase"].str.contains("GEF - 6")]
+    gef_6 = df[df["GEF Phase"].str.contains(f"GEF - {gef_phase}")]
 
     return gef_6["GEF ID"].tolist()
 
@@ -67,8 +67,9 @@ def main():
     # if response:
     #     logger.info(f"Private sector involvement: {response.involvement_level}")
     #     logger.info(f"Reason: {response.reason}")
-    logger.info("Starting batch processing")
-    print(get_project_ids_from_xlsx())
+
+    gef_6_ids = get_project_ids_from_xlsx(gef_phase=6)
+    determine_involvement_batch(project_ids=gef_6_ids)
 
 
 if __name__ == "__main__":
