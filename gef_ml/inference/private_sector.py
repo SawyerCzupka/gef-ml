@@ -14,7 +14,7 @@ Also have the in depth descriptions from Eki
 
 import logging
 from operator import inv
-from typing import Literal, Optional, Union
+from typing import Literal, Optional, List
 
 from llama_index.core import PromptHelper
 from llama_index.core.response_synthesizers import TreeSummarize
@@ -63,35 +63,14 @@ class ResponseObject(BaseModel):
     reason: str = Field(..., description="The reason for the chosen involvement level")
 
 
-def determine_private_sector_involvement(
-    project_id: str,
-) -> ResponseObject | None:
-    query_str = QUERY_PRIVATE_SECTOR_INVOLVEMENT
-
-    nodes = retrieve_points(project_id)
-
-    if not nodes or len(nodes) == 0:
-        logger.warning(f"No nodes found for project_id {project_id}")
-        return None
-
-    # TODO Use output class to represent the involvement levels to return a single one.
-    summarize = TreeSummarize(
-        verbose=True,
-        llm=llm_model,
-        prompt_helper=prompt_helper,
-        output_cls=ResponseObject,  # type: ignore
+def retrieve_points(project_id: str) -> List[NodeWithScore]:
+    """Retrieve nodes from the vector store based on a project ID."""
+    vector_store = get_qdrant_vectorstore(collection_name="temp")
+    embed_model = TogetherEmbedding(
+        model_name="togethercomputer/m2-bert-80M-2k-retrieval"
     )
-
-    response = summarize.synthesize(query=query_str, nodes=nodes)
-
-    if isinstance(response, ResponseObject):  # Should always be true
-        return response
-
-
-def retrieve_points(project_id: str) -> list[NodeWithScore]:
     query_embedding = embed_model.get_query_embedding(QUERY_PRIVATE_SECTOR_INVOLVEMENT)
 
-    # Filter Qdrant search by project_id
     qdrant_filters = qdrant_models.Filter(
         must=[
             qdrant_models.FieldCondition(
@@ -99,31 +78,34 @@ def retrieve_points(project_id: str) -> list[NodeWithScore]:
             )
         ]
     )
-
-    qdrant_query = VectorStoreQuery(
-        query_embedding=query_embedding,
-        similarity_top_k=5,
-    )
+    qdrant_query = VectorStoreQuery(query_embedding=query_embedding, similarity_top_k=5)
 
     logger.info(
         f"Querying for project_id {project_id} in collection {vector_store.collection_name}"
     )
     query_results = vector_store.query(qdrant_query, qdrant_filters=qdrant_filters)
 
-    nodes_with_scores = []
-    if query_results.nodes is None:
-        return nodes_with_scores
+    if not query_results.nodes:
+        logger.warning(f"No nodes found for project_id {project_id}")
+        return []
 
-    logger.info(
-        f"Found {len(query_results.nodes)} nodes for project_id {project_id} in collection {vector_store.collection_name}"
-    )
-
-    for index, node in enumerate(query_results.nodes):
-        score: Optional[float] = None
-
-        if query_results.similarities is not None:
-            score = query_results.similarities[index]
-
-        nodes_with_scores.append(NodeWithScore(node=node, score=score))
-
+    logger.info(f"Found {len(query_results.nodes)} nodes for project_id {project_id}")
+    nodes_with_scores = [
+        NodeWithScore(node=node, score=score)
+        for node, score in zip(query_results.nodes, query_results.similarities or [])
+    ]
     return nodes_with_scores
+
+
+def determine_private_sector_involvement(project_id: str) -> Optional[ResponseObject]:
+    """Determine the level of private sector involvement for a given project ID."""
+    nodes = retrieve_points(project_id)
+    if not nodes:
+        return None
+
+    llm_model = TogetherLLM(model="mistralai/Mixtral-8x7B-Instruct-v0.1")
+    prompt_helper = PromptHelper(context_window=32768, num_output=512)
+    summarize = TreeSummarize(verbose=True, llm=llm_model, prompt_helper=prompt_helper, output_cls=ResponseObject)  # type: ignore
+
+    response = summarize.synthesize(query=QUERY_PRIVATE_SECTOR_INVOLVEMENT, nodes=nodes)
+    return response  # type: ignore
