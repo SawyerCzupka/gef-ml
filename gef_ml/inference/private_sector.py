@@ -14,7 +14,7 @@ Also have the in depth descriptions from Eki
 
 import logging
 from operator import inv
-from typing import Optional, Union, Literal
+from typing import Literal, Optional, Union
 
 from llama_index.core import PromptHelper
 from llama_index.core.response_synthesizers import TreeSummarize
@@ -61,15 +61,26 @@ class ResponseObject(BaseModel):
     reason: str = Field(..., description="The reason for the chosen involvement level")
 
 
-def determine_private_sector_involvement(project_id: str):
+def determine_private_sector_involvement(
+    project_id: str,
+) -> ResponseObject | None:
     # TODO find a better way to get the collection name
 
     query_str = ""
 
     nodes = retrieve_points(project_id)
 
+    if not nodes or len(nodes) == 0:
+        logger.warning(f"No nodes found for project_id {project_id}")
+        return None
+
     # TODO Use output class to represent the involvement levels to return a single one.
-    summarize = TreeSummarize(verbose=True, llm=llm_model, prompt_helper=prompt_helper)
+    summarize = TreeSummarize(
+        verbose=True,
+        llm=llm_model,
+        prompt_helper=prompt_helper,
+        output_cls=ResponseObject,  # type: ignore
+    )
 
     response = summarize.synthesize(query=query_str, nodes=nodes)
 
@@ -98,9 +109,6 @@ def retrieve_points(project_id: str) -> list[NodeWithScore]:
 
     nodes_with_scores = []
     if query_results.nodes is None:
-        logger.warning(
-            f"No nodes found for project_id {project_id} in collection {vector_store.collection_name}"
-        )
         return nodes_with_scores
 
     logger.info(
