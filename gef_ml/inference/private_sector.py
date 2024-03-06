@@ -79,6 +79,7 @@ def retrieve_points(project_id: str, collection_name: str) -> List[NodeWithScore
             )
         ]
     )
+    # TODO Use MMR instead of default query mode.
     qdrant_query = VectorStoreQuery(
         query_embedding=query_embedding, similarity_top_k=20
     )
