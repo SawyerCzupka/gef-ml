@@ -29,14 +29,16 @@ from gef_ml.utils import get_qdrant_vectorstore
 
 logger = logging.getLogger(__name__)
 
-QUERY_PRIVATE_SECTOR_INVOLVEMENT = """Describe instances of private sector involvement. Private sector involvement includes all of the following levels:
+QUERY_PRIVATE_SECTOR_INVOLVEMENT = """Determine instances of private sector involvement. Private sector involvement includes all of the following levels:
 
 - 1: No private sector involvement - Projects which do not involve the private sector
 - 2: Knowledge & Information Sharing - Projects in which the private sector is informed of initiatives and results
 - 3: Policy Development - Projects where the private sector is consulted as part of an intervention run by someone else
 - 4: Capacity Development - Projects focused on building the capacity of private sector actors, especially SMEs
 - 5: Finance - Projects where government or civil society engages with private sector for finance and expertise
-- 6: Industry Leadership - Projects that focus directly on the Private Sector as leader (private sector coming up with solutions; not only trained/capacitated)"""
+- 6: Industry Leadership - Projects that focus directly on the Private Sector as leader (private sector coming up with solutions; not only trained/capacitated)
+
+If there is private sector involvement, please provide the level of involvement and the reason for the chosen involvement level."""
 
 
 vector_store = get_qdrant_vectorstore(collection_name="temp")
@@ -66,7 +68,7 @@ def determine_private_sector_involvement(
 ) -> ResponseObject | None:
     # TODO find a better way to get the collection name
 
-    query_str = ""
+    query_str = QUERY_PRIVATE_SECTOR_INVOLVEMENT
 
     nodes = retrieve_points(project_id)
 
@@ -83,6 +85,9 @@ def determine_private_sector_involvement(
     )
 
     response = summarize.synthesize(query=query_str, nodes=nodes)
+
+    if isinstance(response, ResponseObject):  # Should always be true
+        return response
 
 
 def retrieve_points(project_id: str) -> list[NodeWithScore]:
