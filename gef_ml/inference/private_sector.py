@@ -108,4 +108,18 @@ def determine_private_sector_involvement(project_id: str) -> Optional[ResponseOb
     summarize = TreeSummarize(verbose=True, llm=llm_model, prompt_helper=prompt_helper, output_cls=ResponseObject)  # type: ignore
 
     response = summarize.synthesize(query=QUERY_PRIVATE_SECTOR_INVOLVEMENT, nodes=nodes)
-    return response  # type: ignore
+
+    if isinstance(response, ResponseObject):
+        logger.info(
+            f"Private sector involvement for project_id {project_id}: {response.involvement_level}"
+        )
+        logger.info(f"Reason: {response.reason}")
+
+        return response
+
+    else:
+        logger.error(
+            f"Failed to determine private sector involvement for project_id {project_id}"
+        )
+        logger.info(f"Response: {response}")
+        return None
