@@ -40,8 +40,6 @@ QUERY_PRIVATE_SECTOR_INVOLVEMENT = """Determine instances of private sector invo
 
 If there is private sector involvement, please provide the level of involvement and the reason for the chosen involvement level."""
 
-# TODO find a better way to get the collection name
-vector_store = get_qdrant_vectorstore(collection_name="temp")
 
 embed_model = TogetherEmbedding(model_name="togethercomputer/m2-bert-80M-2k-retrieval")
 llm_model = TogetherLLM(model="mistralai/Mixtral-8x7B-Instruct-v0.1")
@@ -63,9 +61,9 @@ class ResponseObject(BaseModel):
     reason: str = Field(..., description="The reason for the chosen involvement level")
 
 
-def retrieve_points(project_id: str) -> List[NodeWithScore]:
+def retrieve_points(project_id: str, collection_name: str) -> List[NodeWithScore]:
     """Retrieve nodes from the vector store based on a project ID."""
-    vector_store = get_qdrant_vectorstore(collection_name="temp")
+    vector_store = get_qdrant_vectorstore(collection_name=collection_name)
     embed_model = TogetherEmbedding(
         model_name="togethercomputer/m2-bert-80M-2k-retrieval"
     )
@@ -97,9 +95,11 @@ def retrieve_points(project_id: str) -> List[NodeWithScore]:
     return nodes_with_scores
 
 
-def determine_private_sector_involvement(project_id: str) -> Optional[ResponseObject]:
+def determine_private_sector_involvement(
+    project_id: str, qdrant_collection: str
+) -> Optional[ResponseObject]:
     """Determine the level of private sector involvement for a given project ID."""
-    nodes = retrieve_points(project_id)
+    nodes = retrieve_points(project_id, qdrant_collection)
     if not nodes:
         return None
 
