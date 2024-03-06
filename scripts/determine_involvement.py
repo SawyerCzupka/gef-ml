@@ -2,10 +2,11 @@ import logging
 
 from dotenv import load_dotenv
 
+load_dotenv()
+
 from gef_ml.inference import determine_private_sector_involvement
 from gef_ml.utils.log_config import setup_logging
 
-load_dotenv()
 
 setup_logging()
 
@@ -28,4 +29,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()

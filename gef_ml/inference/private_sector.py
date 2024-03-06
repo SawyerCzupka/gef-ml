@@ -13,10 +13,12 @@ Also have the in depth descriptions from Eki
 """
 
 import logging
+import os
 from operator import inv
-from typing import Literal, Optional, List
+from typing import List, Literal, Optional
 
 from llama_index.core import PromptHelper
+from llama_index.core.base.response.schema import PydanticResponse
 from llama_index.core.response_synthesizers import TreeSummarize
 from llama_index.core.schema import NodeWithScore
 from llama_index.core.vector_stores import VectorStoreQuery
@@ -24,6 +26,7 @@ from llama_index.embeddings.together import TogetherEmbedding
 from llama_index.llms.together import TogetherLLM
 from pydantic import BaseModel, Field
 from qdrant_client.http import models as qdrant_models
+from regex import F
 
 from gef_ml.utils import get_qdrant_vectorstore
 
@@ -40,6 +43,9 @@ QUERY_PRIVATE_SECTOR_INVOLVEMENT = """Determine instances of private sector invo
 
 If there is private sector involvement, please provide the level of involvement and the reason for the chosen involvement level."""
 
+
+if os.environ.get("TOGETHER_API_KEY") is None:
+    raise ValueError("TOGETHER_API_KEY environment variable is not set")
 
 embed_model = TogetherEmbedding(model_name="togethercomputer/m2-bert-80M-2k-retrieval")
 llm_model = TogetherLLM(model="mistralai/Mixtral-8x7B-Instruct-v0.1")
@@ -64,9 +70,6 @@ class ResponseObject(BaseModel):
 def retrieve_points(project_id: str, collection_name: str) -> List[NodeWithScore]:
     """Retrieve nodes from the vector store based on a project ID."""
     vector_store = get_qdrant_vectorstore(collection_name=collection_name)
-    embed_model = TogetherEmbedding(
-        model_name="togethercomputer/m2-bert-80M-2k-retrieval"
-    )
     query_embedding = embed_model.get_query_embedding(QUERY_PRIVATE_SECTOR_INVOLVEMENT)
 
     qdrant_filters = qdrant_models.Filter(
@@ -76,7 +79,9 @@ def retrieve_points(project_id: str, collection_name: str) -> List[NodeWithScore
             )
         ]
     )
-    qdrant_query = VectorStoreQuery(query_embedding=query_embedding, similarity_top_k=5)
+    qdrant_query = VectorStoreQuery(
+        query_embedding=query_embedding, similarity_top_k=20
+    )
 
     logger.info(
         f"Querying for project_id {project_id} in collection {vector_store.collection_name}"
@@ -109,17 +114,18 @@ def determine_private_sector_involvement(
 
     response = summarize.synthesize(query=QUERY_PRIVATE_SECTOR_INVOLVEMENT, nodes=nodes)
 
-    if isinstance(response, ResponseObject):
-        logger.info(
-            f"Private sector involvement for project_id {project_id}: {response.involvement_level}"
-        )
-        logger.info(f"Reason: {response.reason}")
+    if isinstance(response, PydanticResponse):
+        if isinstance(response.response, ResponseObject):
+            structured_response = ResponseObject(
+                involvement_level=response.response.involvement_level,
+                reason=response.response.reason,
+            )
 
-        return response
+    if structured_response:
+        return structured_response
 
     else:
-        logger.error(
-            f"Failed to determine private sector involvement for project_id {project_id}"
-        )
+        logger.info(f"Didn't return the pydantic object but probably still worked")
         logger.info(f"Response: {response}")
+        logger.info(f"Type: {type(response)}")
         return None
