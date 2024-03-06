@@ -40,7 +40,7 @@ QUERY_PRIVATE_SECTOR_INVOLVEMENT = """Determine instances of private sector invo
 
 If there is private sector involvement, please provide the level of involvement and the reason for the chosen involvement level."""
 
-
+# TODO find a better way to get the collection name
 vector_store = get_qdrant_vectorstore(collection_name="temp")
 
 embed_model = TogetherEmbedding(model_name="togethercomputer/m2-bert-80M-2k-retrieval")
@@ -66,8 +66,6 @@ class ResponseObject(BaseModel):
 def determine_private_sector_involvement(
     project_id: str,
 ) -> ResponseObject | None:
-    # TODO find a better way to get the collection name
-
     query_str = QUERY_PRIVATE_SECTOR_INVOLVEMENT
 
     nodes = retrieve_points(project_id)
