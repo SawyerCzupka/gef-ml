@@ -48,11 +48,6 @@ If there is private sector involvement, please provide the level of involvement 
 if os.environ.get("TOGETHER_API_KEY") is None:
     raise ValueError("TOGETHER_API_KEY environment variable is not set")
 
-embed_model = TogetherEmbedding(model_name="togethercomputer/m2-bert-80M-2k-retrieval")
-llm_model = TogetherLLM(model="mistralai/Mixtral-8x7B-Instruct-v0.1")
-
-prompt_helper = PromptHelper(context_window=32768, num_output=512)
-
 
 class ResponseObject(BaseModel):
     """Data model for the response to a private sector involvement query."""
@@ -70,6 +65,10 @@ class ResponseObject(BaseModel):
 
 def retrieve_points(project_id: str, collection_name: str) -> List[NodeWithScore]:
     """Retrieve nodes from the vector store based on a project ID."""
+    embed_model = TogetherEmbedding(
+        model_name="togethercomputer/m2-bert-80M-2k-retrieval"
+    )
+
     vector_store = get_qdrant_vectorstore(collection_name=collection_name)
     query_embedding = embed_model.get_query_embedding(QUERY_PRIVATE_SECTOR_INVOLVEMENT)
 
