@@ -1,7 +1,11 @@
 import logging
 
+from dotenv import load_dotenv
+
 from gef_ml.inference import determine_private_sector_involvement
 from gef_ml.utils.log_config import setup_logging
+
+load_dotenv()
 
 setup_logging()
 
@@ -11,7 +15,7 @@ GEF_6_COLLECTION = "gef_6_512_64"
 
 
 def main():
-    project_id = "1234"
+    project_id = "6973"
     collection = GEF_6_COLLECTION
 
     response = determine_private_sector_involvement(
