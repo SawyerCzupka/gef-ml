@@ -2,6 +2,7 @@ import logging
 
 from dotenv import load_dotenv
 import csv
+import pandas as pd
 
 load_dotenv()
 
@@ -16,6 +17,8 @@ logger = logging.getLogger(__name__)
 GEF_6_COLLECTION = "gef_6_512_64"
 
 OUTPUT_CSV = "involvement_results.csv"
+EXCEL_PATH = "../data/ieo_private_sector_analysis.xlsx"
+EXCEL_SHEET = "projectlist"
 
 
 def determine_involvement_batch(
@@ -44,17 +47,28 @@ def determine_involvement_batch(
                 logger.warning(f"No data received for project ID {project_id}")
 
 
+def get_project_ids_from_xlsx() -> list[str]:
+    df = pd.read_excel(io=EXCEL_PATH, sheet_name=EXCEL_SHEET)
+    df["GEF ID"] = df["GEF ID"].astype(str)
+
+    gef_6 = df[df["GEF Phase"].str.contains("GEF - 6")]
+
+    return gef_6["GEF ID"].tolist()
+
+
 def main():
-    project_id = "6973"
-    collection = GEF_6_COLLECTION
+    # project_id = "6973"
+    # collection = GEF_6_COLLECTION
 
-    response = determine_private_sector_involvement(
-        project_id, qdrant_collection=collection
-    )
+    # response = determine_private_sector_involvement(
+    #     project_id, qdrant_collection=collection
+    # )
 
-    if response:
-        logger.info(f"Private sector involvement: {response.involvement_level}")
-        logger.info(f"Reason: {response.reason}")
+    # if response:
+    #     logger.info(f"Private sector involvement: {response.involvement_level}")
+    #     logger.info(f"Reason: {response.reason}")
+    logger.info("Starting batch processing")
+    print(get_project_ids_from_xlsx())
 
 
 if __name__ == "__main__":
