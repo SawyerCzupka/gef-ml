@@ -3,6 +3,7 @@ import logging
 from dotenv import load_dotenv
 import csv
 import pandas as pd
+from tqdm import tqdm
 
 load_dotenv()
 
@@ -32,7 +33,7 @@ def determine_involvement_batch(
         writer = csv.writer(f)
         writer.writerow(["project_id", "involvement_level", "reason"])
 
-        for project_id in project_ids:
+        for project_id in tqdm(project_ids, desc="Processing projects"):
             logger.info(f"Processing project ID {project_id}")
             response = determine_private_sector_involvement(
                 project_id, qdrant_collection=qdrant_collection
@@ -41,6 +42,7 @@ def determine_involvement_batch(
                 writer.writerow(
                     [project_id, response.involvement_level, response.reason]
                 )
+                f.flush()
                 logger.info(f"Successfully processed project ID {project_id}")
             else:
                 writer.writerow([project_id, "No data", "No data"])

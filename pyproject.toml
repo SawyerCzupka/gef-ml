@@ -23,6 +23,7 @@ aiohttp = "^3.9.3"
 docx2txt = "^0.8"
 colorlog = "^6.8.2"
 llama-index-program-openai = "^0.1.4"
+openpyxl = "^3.1.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.2.0"

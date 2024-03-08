@@ -103,7 +103,7 @@ def retrieve_points(project_id: str, collection_name: str) -> List[NodeWithScore
 
 
 def determine_private_sector_involvement(
-    project_id: str, qdrant_collection: str
+    project_id: str, qdrant_collection: str, retry_num: int = 0
 ) -> Optional[ResponseObject]:
     """Determine the level of private sector involvement for a given project ID."""
     nodes = retrieve_points(project_id, qdrant_collection)
@@ -114,7 +114,22 @@ def determine_private_sector_involvement(
     prompt_helper = PromptHelper(context_window=32768, num_output=512)
     summarize = TreeSummarize(verbose=True, llm=llm_model, prompt_helper=prompt_helper, output_cls=ResponseObject)  # type: ignore
 
-    response = summarize.synthesize(query=QUERY_PRIVATE_SECTOR_INVOLVEMENT, nodes=nodes)
+    try:
+        response = summarize.synthesize(
+            query=QUERY_PRIVATE_SECTOR_INVOLVEMENT, nodes=nodes
+        )
+    except Exception as e:
+        logger.exception(f"Error synthesizing response for project_id {project_id}")
+        if retry_num < 3:
+            logger.warning(f"Retrying for project_id {project_id}")
+            return determine_private_sector_involvement(
+                project_id, qdrant_collection, retry_num=retry_num + 1
+            )
+        else:
+            logger.error(
+                f"Failed to determine private sector involvement for project_id {project_id}"
+            )
+            return None
 
     if isinstance(response, PydanticResponse):
         if isinstance(response.response, ResponseObject):
