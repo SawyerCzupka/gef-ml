@@ -14,6 +14,7 @@ def get_pipeline(
     together_embed_model_name: str = "togethercomputer/m2-bert-80M-32k-retrieval",
     chunk_size=512,
     chunk_overlap=64,
+    include_metadata=True,
 ) -> IngestionPipeline:
     """
     Initializes and returns an ingestion pipeline with predefined transformations.
@@ -22,7 +23,11 @@ def get_pipeline(
         "Initializing ingestion pipeline with model: %s", together_embed_model_name
     )
     transformations = [
-        SentenceSplitter(chunk_size=512, chunk_overlap=64, include_metadata=True),
+        SentenceSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            include_metadata=include_metadata,
+        ),
     ]
 
     return IngestionPipeline(transformations=transformations)  # type: ignore
