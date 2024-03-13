@@ -41,7 +41,10 @@ class StreamingIngestion:
         self.directory = directory
         self.vector_store = vector_store
         self.pipeline = get_pipeline(
-            vector_store, chunk_size=chunk_size, chunk_overlap=chunk_overlap
+            vector_store,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            include_metadata=False,
         )
 
     def _ingest_project_id(

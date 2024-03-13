@@ -11,10 +11,13 @@ logger = logging.getLogger(__name__)
 
 
 async def main():
-    vector_store = get_qdrant_vectorstore(collection_name="gef_6_512_64")
+    vector_store = get_qdrant_vectorstore(collection_name="gef_6_1024_96")
 
     ingest_manager = StreamingIngestion(
-        directory="../data/gef-6/", vector_store=vector_store
+        directory="../data/gef-6/",
+        vector_store=vector_store,
+        chunk_size=1024,
+        chunk_overlap=96,
     )
 
     await ingest_manager.ingest()
