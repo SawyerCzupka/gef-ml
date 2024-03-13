@@ -65,7 +65,7 @@ class EmbeddingService:
 
             else:
                 raise Exception(
-                    f"Failed to generate embedding for node. HTTP Status: {response.status}. Reason: {response.reason}. Response: {await response.text()}"
+                    f"Failed to generate embedding for node. HTTP Status: {response.status}. Reason: {response.reason}. Response: {await response.text()}\n\n Request: {payload}"
                 )
 
     async def generate_embeddings(
