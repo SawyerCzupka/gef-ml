@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 def get_pipeline(
     vector_store: BasePydanticVectorStore | None = None,
     together_embed_model_name: str = "togethercomputer/m2-bert-80M-32k-retrieval",
+    chunk_size=512,
+    chunk_overlap=64,
 ) -> IngestionPipeline:
     """
     Initializes and returns an ingestion pipeline with predefined transformations.

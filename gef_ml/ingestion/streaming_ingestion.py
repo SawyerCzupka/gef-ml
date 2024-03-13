@@ -31,12 +31,18 @@ class StreamingIngestion:
     WORKERS_PER_CHUNK = 1
 
     def __init__(
-        self, directory: str, vector_store: BasePydanticVectorStore | None = None
+        self,
+        directory: str,
+        vector_store: BasePydanticVectorStore | None = None,
+        chunk_size=512,
+        chunk_overlap=64,
     ):
         logger.info("Initializing StreamingIngestion for directory: %s", directory)
         self.directory = directory
         self.vector_store = vector_store
-        self.pipeline = get_pipeline(vector_store)
+        self.pipeline = get_pipeline(
+            vector_store, chunk_size=chunk_size, chunk_overlap=chunk_overlap
+        )
 
     def _ingest_project_id(
         self, project_id: str, show_progress: bool = True
