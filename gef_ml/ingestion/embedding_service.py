@@ -65,14 +65,14 @@ class EmbeddingService:
 
             else:
                 raise Exception(
-                    f"Failed to generate embedding for node. HTTP Status: {response.status}"
+                    f"Failed to generate embedding for node. HTTP Status: {response.status}. Reason: {response.reason}. Response: {await response.text()}"
                 )
 
     async def generate_embeddings(
         self,
         nodes: List[Document],
         model: str = "togethercomputer/m2-bert-80M-2k-retrieval",
-        max_requests_per_second: int = 100,
+        max_requests_per_second: int = 75,
         max_chunk_size: int = 10,
     ) -> List[Document]:
         timeout = aiohttp.ClientTimeout(total=60 * 60)  # 1 hour
