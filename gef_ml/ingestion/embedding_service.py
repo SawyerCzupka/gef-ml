@@ -90,7 +90,11 @@ class EmbeddingService:
             ]
 
             for node_chunk in tqdm(chunks, desc="Creating embedding requests"):
-                valid_chunk = [n for n in node_chunk if n.content]
+                valid_chunk = [
+                    n
+                    for n in node_chunk
+                    if len(n.get_content(metadata_mode=MetadataMode.EMBED)) > 0
+                ]
                 async with limiter:
                     task = asyncio.create_task(
                         self._fetch_embeddings_with_retry(session, valid_chunk, model)
