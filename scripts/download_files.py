@@ -3,8 +3,8 @@ import csv
 import requests
 import logging
 from bs4 import BeautifulSoup
-import dask
-from dask import delayed
+from dask.delayed import delayed
+from dask.base import compute
 from urllib.parse import urlparse
 
 PROJECTS_CSV_PATH = "projects.csv"
@@ -527,7 +527,7 @@ def main():
         10054,
     ]
     tasks = [delayed(download_pdfs_from_project_page)(pid) for pid in gef6_project_ids]
-    _ = dask.compute(*tasks)
+    _ = compute(*tasks)
 
 
 if __name__ == "__main__":
