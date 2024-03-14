@@ -1,15 +1,14 @@
+import csv
 import logging
 
-from dotenv import load_dotenv
-import csv
 import pandas as pd
+from dotenv import load_dotenv
 from tqdm import tqdm
 
 load_dotenv()
 
 from gef_ml.inference import determine_private_sector_involvement
 from gef_ml.utils.log_config import setup_logging
-
 
 setup_logging()
 
