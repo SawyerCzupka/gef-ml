@@ -1,9 +1,9 @@
+import asyncio
+import logging
+
 from gef_ml.ingestion import StreamingIngestion
 from gef_ml.utils import get_qdrant_vectorstore
 from gef_ml.utils.log_config import setup_logging
-
-import logging
-import asyncio
 
 setup_logging()
 

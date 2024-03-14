@@ -5,12 +5,12 @@ import logging
 import os
 from typing import List
 
-from tqdm.asyncio import tqdm_asyncio
-from tqdm import tqdm
 import aiohttp
 import backoff
 from aiolimiter import AsyncLimiter
 from llama_index.core.schema import Document, MetadataMode
+from tqdm import tqdm
+from tqdm.asyncio import tqdm_asyncio
 
 from gef_ml.utils.log_config import setup_logging
 

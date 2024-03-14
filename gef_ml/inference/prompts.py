@@ -1,6 +1,7 @@
-from typing import Optional
-from pydantic import BaseModel, Field, Literal
 from enum import Enum
+from typing import Optional
+
+from pydantic import BaseModel, Field, Literal
 
 from .descriptions import (
     DESC_CAPACITY_DEV,
