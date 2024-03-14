@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import Optional, Literal
 
 from pydantic import BaseModel, Field
 
@@ -12,14 +12,7 @@ from .descriptions import (
     DESC_POLICY_DEV,
 )
 
-QUERY_PRIVATE_SECTOR_INVOLVEMENT = f"""Determine instances of private sector involvement in this document exerpt. Private sector involvement is defined by the following levels:
-
-- 1: No private sector involvement - Projects which do not involve the private sector
-- 2: Knowledge & Information Sharing - Projects in which the private sector is informed of initiatives and results
-- 3: Policy Development - Projects where the private sector is consulted as part of an intervention run by someone else
-- 4: Capacity Development - Projects focused on building the capacity of private sector actors, especially SMEs
-- 5: Finance - Projects where government or civil society engages with private sector for finance and expertise
-- 6: Industry Leadership - Projects that focus directly on the Private Sector as leader (private sector coming up with solutions; not only trained/capacitated)
+QUERY_PRIVATE_SECTOR_INVOLVEMENT = f"""Determine the level of private sector involvement in the provided context. Private sector involvement is defined by the following levels:
 
 Below are the in depth descriptions of each level along with discintions between them:
 
@@ -34,6 +27,10 @@ Below are the in depth descriptions of each level along with discintions between
 {DESC_FINANCE}
 
 {DESC_INDUSTRY_LEADERSHIP}
+
+Please select the primary level of private sector involvement in this document exerpt. If there is no clear primary level, also select the secondary level. If there is no private sector involvement, select "No private sector involvement" and provide a reason for the choice. 
+
+Respond in JSON with the keys "involvement_level", "secondary_involvement_level" (if applicable), "reason", and "extra_info" (if applicable).
 """
 
 
@@ -49,10 +46,24 @@ class InvolvementLevelEnum(str, Enum):
 class ResponseObject(BaseModel):
     """Data model for the response to a private sector involvement query."""
 
-    involvement_level: InvolvementLevelEnum = Field(
-        ..., description="The primary level of private sector involvement"
-    )
-    secondary_involvement_level: Optional[InvolvementLevelEnum] = Field(
+    involvement_level: Literal[
+        "No private sector involvement",
+        "Knowledge & Information Sharing",
+        "Policy Development",
+        "Capacity Development",
+        "Finance",
+        "Industry Leadership",
+    ] = Field(..., description="The primary level of private sector involvement")
+    secondary_involvement_level: Optional[
+        Literal[
+            "No private sector involvement",
+            "Knowledge & Information Sharing",
+            "Policy Development",
+            "Capacity Development",
+            "Finance",
+            "Industry Leadership",
+        ]
+    ] = Field(
         ...,
         description="The secondary level of private sector involvement if there is not a clear primary level",
     )

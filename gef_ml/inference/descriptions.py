@@ -1,4 +1,4 @@
-DESC_NO_PRIVATE_SECTOR = """Category 1 ("No private sector")
+DESC_NO_PRIVATE_SECTOR = """"No private sector"
 
 Projects that do not involve the private sector, including projects that only mention the private sector in stakeholder identification without directly engaging with them in any way."""
 

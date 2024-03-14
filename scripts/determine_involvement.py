@@ -30,7 +30,15 @@ def determine_involvement_batch(
     with open(path, "w", newline="") as f:
         logger.info(f"Writing results to {path}")
         writer = csv.writer(f)
-        writer.writerow(["project_id", "involvement_level", "reason"])
+        writer.writerow(
+            [
+                "project_id",
+                "involvement_level",
+                "secondary_involvement_level",
+                "reason",
+                "extra_info",
+            ]
+        )
 
         for project_id in tqdm(project_ids, desc="Processing projects"):
             logger.info(f"Processing project ID {project_id}")
@@ -39,7 +47,13 @@ def determine_involvement_batch(
             )
             if response:
                 writer.writerow(
-                    [project_id, response.involvement_level, response.reason]
+                    [
+                        project_id,
+                        response.involvement_level,
+                        response.secondary_involvement_level,
+                        response.reason,
+                        response.extra_info,
+                    ]
                 )
                 f.flush()
                 logger.info(f"Successfully processed project ID {project_id}")
