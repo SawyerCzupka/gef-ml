@@ -1,0 +1,117 @@
+
+// file loading utilities
+
+import logging
+import os
+
+from gef_ml.utils.log_config import setup_logging
+
+
+setup_logging()
+
+logger = logging.getLogger(__name__)
+
+
+def file_metadata(filename: str) -> dict[str, str]:
+    """
+    Extracts metadata from the given filename.
+    """
+    logger.debug("Extracting metadata from filename: %s", filename)
+    base_name = os.path.basename(filename)
+    project_id, doc_id = parse_filename(base_name)
+    return {
+        "filename": base_name,
+        "extension": os.path.splitext(base_name)[1],
+        "project_id": project_id,
+        "doc_id": doc_id,
+    }
+
+
+def parse_filename(filename: str) -> tuple[str, str]:
+    """
+    Parses the filename to extract project and document IDs.
+    """
+    parts = filename.split("_")
+    project_id = parts[0][1:]
+    doc_id = parts[1].split(".")[0][3:]
+    logger.debug(
+        "Parsed filename %s into project_id=%s, doc_id=%s", filename, project_id, doc_id
+    )
+    return project_id, doc_id
+
+
+__all__ = ["file_metadata", "parse_filename"]
+
+// transformation pipeline
+
+import logging
+
+from llama_index.core.ingestion import IngestionPipeline
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.vector_stores.types import BasePydanticVectorStore
+
+# Configure logger
+
+logger = logging.getLogger(__name__)
+
+
+def get_pipeline(
+    vector_store: BasePydanticVectorStore | None = None,
+    together_embed_model_name: str = "togethercomputer/m2-bert-80M-32k-retrieval",
+    chunk_size=512,
+    chunk_overlap=64,
+    include_metadata=True,
+) -> IngestionPipeline:
+    """
+    Initializes and returns an ingestion pipeline with predefined transformations.
+    """
+    logger.debug(
+        "Initializing ingestion pipeline with model: %s", together_embed_model_name
+    )
+    transformations = [
+        SentenceSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            include_metadata=include_metadata,
+        ),
+    ]
+
+    return IngestionPipeline(transformations=transformations)  # type: ignore
+
+// Text Cleaner
+
+import logging
+import re
+import unicodedata
+
+from llama_index.core.schema import Document, TransformComponent
+
+from gef_ml.utils.log_config import setup_logging
+
+setup_logging()
+logger = logging.getLogger(__name__)
+
+
+class TextCleaner(TransformComponent):
+    """
+    Transform component to clean text extracted from documents.
+    Things that should be cleaned include special characters like unicode characters and
+    other non-standard whitespace or control characters.
+    """
+
+    def __call__(self, nodes: list[Document], **kwargs):
+        for node in nodes:
+            node.text = re.sub(r"(\w)\u00a0(\w)", r"\1 \2", node.text)
+            node.text = re.sub(r"(\w)\u00a0", r"\1 ", node.text)
+            node.text = re.sub(r"\u00a0(\w)", r" \1", node.text)
+
+            # Replace non-breaking spaces with regular spaces
+            node.text = node.text.replace("\u00a0", " ")
+            # Replace other types of control characters
+            node.text = re.sub(r"[\x00-\x1F\x7F-\x9F]", " ", node.text)
+            # Normalize unicode to ensure consistent character representation
+            node.text = unicodedata.normalize("NFKC", node.text)
+            # Optionally, you might want to strip leading and trailing whitespace
+            node.text = node.text.strip()
+
+        return nodes
