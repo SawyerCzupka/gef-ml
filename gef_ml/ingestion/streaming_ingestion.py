@@ -44,7 +44,7 @@ class StreamingIngestion:
             vector_store,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
-            include_metadata=False,
+            include_metadata=True,
         )
 
     def _ingest_project_id(

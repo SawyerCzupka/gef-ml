@@ -112,7 +112,12 @@ def determine_private_sector_involvement(
 
     if isinstance(response, PydanticResponse):
         if isinstance(response.response, ResponseObject):
-            structured_response = response.response
+            structured_response = ResponseObject(
+                involvement_level=response.response.involvement_level,
+                secondary_involvement_level=response.response.secondary_involvement_level,
+                reason=response.response.reason,
+                extra_info=response.response.extra_info,
+            )
 
     if structured_response:
         return structured_response
