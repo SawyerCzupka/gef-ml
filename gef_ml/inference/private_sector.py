@@ -61,7 +61,9 @@ class ResponseObject(BaseModel):
     reason: str = Field(..., description="The reason for the chosen involvement level")
 
 
-def retrieve_points(project_id: str, collection_name: str) -> List[NodeWithScore]:
+def retrieve_points(
+    project_id: str, collection_name: str, top_k: int = 20, mmr_threshold: float = 0.8
+) -> List[NodeWithScore]:
     """Retrieve nodes from the vector store based on a project ID."""
     embed_model = TogetherEmbedding(
         model_name="togethercomputer/m2-bert-80M-2k-retrieval"
@@ -80,9 +82,9 @@ def retrieve_points(project_id: str, collection_name: str) -> List[NodeWithScore
 
     qdrant_query = VectorStoreQuery(
         query_embedding=query_embedding,
-        similarity_top_k=20,
+        similarity_top_k=top_k,
         mode=VectorStoreQueryMode.MMR,
-        mmr_threshold=0.8,  # TODO: Determine the best threshold, closer to one is more similar, closer to zero is more diverse
+        mmr_threshold=mmr_threshold,  # TODO: Determine the best threshold, closer to one is more similar, closer to zero is more diverse
     )
 
     logger.info(
