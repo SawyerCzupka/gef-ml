@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 GEF_6_COLLECTION = "gef_6_512_64"
 
-OUTPUT_CSV = "involvement_results.csv"
+OUTPUT_CSV = "involvement_results_v2.csv"
 EXCEL_PATH = "../data/ieo_private_sector_analysis.xlsx"
 EXCEL_SHEET = "projectlist"
 
@@ -59,19 +59,11 @@ def get_project_ids_from_xlsx(gef_phase: int) -> list[str]:
 
 
 def main():
-    # project_id = "6973"
     # collection = GEF_6_COLLECTION
-
-    # response = determine_private_sector_involvement(
-    #     project_id, qdrant_collection=collection
-    # )
-
-    # if response:
-    #     logger.info(f"Private sector involvement: {response.involvement_level}")
-    #     logger.info(f"Reason: {response.reason}")
+    collection = "gef_6_1024_96"
 
     gef_6_ids = get_project_ids_from_xlsx(gef_phase=6)
-    determine_involvement_batch(project_ids=gef_6_ids)
+    determine_involvement_batch(project_ids=gef_6_ids, qdrant_collection=collection)
 
 
 if __name__ == "__main__":
