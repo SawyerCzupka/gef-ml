@@ -73,7 +73,7 @@ def get_project_ids_from_xlsx(gef_phase: int) -> list[str]:
 
 def main():
     # collection = GEF_6_COLLECTION
-    collection = "gef_6_1024_96"
+    collection = "gef_6_1024_96_2"
 
     gef_6_ids = get_project_ids_from_xlsx(gef_phase=6)
     determine_involvement_batch(project_ids=gef_6_ids, qdrant_collection=collection)
