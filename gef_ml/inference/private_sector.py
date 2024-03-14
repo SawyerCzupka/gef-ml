@@ -29,27 +29,13 @@ from qdrant_client.http import models as qdrant_models
 
 from gef_ml.utils import get_qdrant_vectorstore
 
-from .prompts import QUERY_PRIVATE_SECTOR_INVOLVEMENT
+from .prompts import QUERY_PRIVATE_SECTOR_INVOLVEMENT, ResponseObject
 
 logger = logging.getLogger(__name__)
 
 
 if os.environ.get("TOGETHER_API_KEY") is None:
     raise ValueError("TOGETHER_API_KEY environment variable is not set")
-
-
-class ResponseObject(BaseModel):
-    """Data model for the response to a private sector involvement query."""
-
-    involvement_level: Literal[
-        "No private sector involvement",
-        "Knowledge & Information Sharing",
-        "Policy Development",
-        "Capacity Development",
-        "Finance",
-        "Industry Leadership",
-    ] = Field(..., description="The level of private sector involvement")
-    reason: str = Field(..., description="The reason for the chosen involvement level")
 
 
 def retrieve_points(
@@ -126,10 +112,7 @@ def determine_private_sector_involvement(
 
     if isinstance(response, PydanticResponse):
         if isinstance(response.response, ResponseObject):
-            structured_response = ResponseObject(
-                involvement_level=response.response.involvement_level,
-                reason=response.response.reason,
-            )
+            structured_response = response.response
 
     if structured_response:
         return structured_response
