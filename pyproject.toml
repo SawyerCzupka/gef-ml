@@ -30,7 +30,7 @@ black = "^24.2.0"
 ipykernel = "^6.29.2"
 
 [tool.poetry.group.dask.dependencies]
-dask = "^2024.2.1"
+dask = {extras = ["complete"], version = "^2024.3.0"}
 
 
 [build-system]
