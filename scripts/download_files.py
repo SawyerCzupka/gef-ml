@@ -5,14 +5,16 @@ import logging
 from bs4 import BeautifulSoup
 from dask.delayed import delayed
 from dask.base import compute
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
-from .project_ids import gef6_project_ids, project_ids
+from project_ids import gef6_project_ids, project_ids
 
-PROJECTS_CSV_PATH = "projects.csv"
-BASE_URL = "https://www.thegef.org/projects-operations/projects/"
-OUTPUT_PATH = "../data/gef-6"
+PROJECTS_CSV_PATH = os.getenv("PROJECTS_CSV_PATH", "projects.csv")
+OUTPUT_PATH = os.getenv("OUTPUT_PATH", "../data/gef-6")
+
 INTERESTED_YEARS = [i for i in range(2012, 2024)]
+
+BASE_URL = "https://www.thegef.org/projects-operations/projects/"
 
 # Set up logging
 logging.basicConfig(
@@ -64,10 +66,12 @@ def download_pdfs_from_project_page(project_id):
                         logging.warning(f"Skipping invalid URL: {href}")
                         continue
 
+                    original_filename = os.path.basename(unquote(parsed_url.path))
+
                     file_response = requests.get(href)
                     file_path = os.path.join(
                         OUTPUT_PATH,
-                        f"{project_id}/p{project_id}_doc{idx}{file_extension}",
+                        f"{project_id}/p{project_id}_doc{idx}__{original_filename}",
                     )
 
                     # Make project dir
