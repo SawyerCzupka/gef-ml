@@ -29,8 +29,9 @@ openpyxl = "^3.1.2"
 black = "^24.2.0"
 ipykernel = "^6.29.2"
 
-[tool.poetry.group.dask.dependencies]
-dask = {extras = ["complete"], version = "^2024.3.0"}
+[tool.poetry.group.download.dependencies]
+dask = { extras = ["complete"], version = "^2024.3.0" }
+bs4 = "^0.0.2"
 
 
 [build-system]
