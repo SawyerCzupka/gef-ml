@@ -44,7 +44,7 @@ def get_project_ids_from_csv(path, interested_years=None):
     return project_ids
 
 
-def create_directory(path):
+def create_directory(path: str):
     if not os.path.exists(path):
         os.makedirs(path)
     os.chmod(path, 0o777)  # Ensure the directory is writable
