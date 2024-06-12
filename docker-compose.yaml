@@ -9,15 +9,15 @@ services:
     volumes:
       - ./data/qdrant/storage:/qdrant/storage
 
-  download_script:
-    build:
-      context: .
-      dockerfile: Dockerfile.download
-    container_name: download_script
-    volumes:
-      - ./test_data:/test_data
-    environment:
-      - PROJECTS_CSV_PATH=/test_data/projects.csv
-      - OUTPUT_PATH=/test_data/dump
-    command: [ "python", "scripts/download_files.py" ]
-    user: '1000:1000'
+  # download_script:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.download
+  #   container_name: download_script
+  #   volumes:
+  #     - ./test_data:/test_data
+  #   environment:
+  #     - PROJECTS_CSV_PATH=/test_data/projects.csv
+  #     - OUTPUT_PATH=/test_data/dump
+  #   command: [ "python", "scripts/download_files.py" ]
+  #   user: '1000:1000'
