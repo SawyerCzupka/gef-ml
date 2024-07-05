@@ -1,20 +1,22 @@
-import os
 import csv
-import requests
+import json
 import logging
-from bs4 import BeautifulSoup
-from dask.delayed import delayed
-from dask.base import compute
-from urllib.parse import urlparse, unquote
+import os
+from urllib.parse import unquote, urlparse
 
-from project_ids import gef6_project_ids, project_ids
+import requests
+from bs4 import BeautifulSoup
+from dask.base import compute
+from dask.delayed import delayed
 
 # Constants
 PROJECTS_CSV_PATH = os.getenv("PROJECTS_CSV_PATH", "projects.csv")
-OUTPUT_PATH = os.getenv("OUTPUT_PATH", "../data/gef-6")
+OUTPUT_PATH = os.getenv("OUTPUT_PATH", "../data/gef-7")
 VALID_EXTENSIONS = [".pdf", ".doc", ".docx", ".txt"]
 INTERESTED_YEARS = [i for i in range(2012, 2024)]
 BASE_URL = os.getenv("BASE_URL", "https://www.thegef.org/projects-operations/projects/")
+
+JSON_PATH = "../data/project_ids.json"
 
 
 # Set up logging
@@ -22,6 +24,15 @@ def setup_logging():
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
     )
+
+
+def get_ids_from_json(list_name: str, path: str = JSON_PATH) -> list[str]:
+    project_ids = []
+    with open(path, "r") as f:
+        data = json.load(f)
+        for project_id in data[list_name]:
+            project_ids.append(project_id)
+    return project_ids
 
 
 def get_project_ids_from_csv(path, interested_years=None):
@@ -109,14 +120,21 @@ def download_pdfs_from_project_page(project_id):
     return downloaded_files, skipped_extensions
 
 
+def download_project_ids(project_ids: list[str]):
+    tasks = [delayed(download_pdfs_from_project_page)(pid) for pid in project_ids]
+    _ = compute(*tasks)
+
+
 def main():
     setup_logging()
     create_directory(OUTPUT_PATH)
 
     # project_ids = get_project_ids_from_csv(PROJECTS_CSV_PATH, INTERESTED_YEARS)
-    project_ids = gef6_project_ids
-    tasks = [delayed(download_pdfs_from_project_page)(pid) for pid in project_ids]
-    _ = compute(*tasks)
+    # project_ids = gef6_project_ids
+
+    project_ids = get_ids_from_json("gef_7_project_ids")
+
+    download_project_ids(project_ids)
 
 
 if __name__ == "__main__":
